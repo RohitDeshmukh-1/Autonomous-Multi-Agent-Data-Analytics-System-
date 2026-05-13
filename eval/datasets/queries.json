@@ -1,0 +1,50 @@
+[
+  {
+    "id": "001",
+    "query": "What are the top 5 products by total revenue?",
+    "connector_id": "neon:public",
+    "expected_intent": "sql",
+    "expected_tables": ["products", "order_items"],
+    "expected_contains": ["product", "revenue"]
+  },
+  {
+    "id": "002",
+    "query": "Show monthly order count for 2024",
+    "connector_id": "neon:public",
+    "expected_intent": "sql",
+    "expected_tables": ["orders"],
+    "expected_contains": ["month", "count"]
+  },
+  {
+    "id": "003",
+    "query": "Which region has the highest average order value?",
+    "connector_id": "neon:public",
+    "expected_intent": "sql",
+    "expected_tables": ["customers", "orders"],
+    "expected_contains": ["region", "average"]
+  },
+  {
+    "id": "004",
+    "query": "List customers who joined in 2023 and have placed more than 3 orders",
+    "connector_id": "neon:public",
+    "expected_intent": "sql",
+    "expected_tables": ["customers", "orders"],
+    "expected_contains": ["customer", "orders"]
+  },
+  {
+    "id": "005",
+    "query": "What is the refund rate by product category?",
+    "connector_id": "neon:public",
+    "expected_intent": "sql",
+    "expected_tables": ["orders", "order_items", "products"],
+    "expected_contains": ["refund", "category"]
+  },
+  {
+    "id": "006",
+    "query": "What is the weather like in Paris?",
+    "connector_id": "neon:public",
+    "expected_intent": "unsupported",
+    "expected_tables": [],
+    "expected_contains": []
+  }
+]

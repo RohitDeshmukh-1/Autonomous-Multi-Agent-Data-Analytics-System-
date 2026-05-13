@@ -1,0 +1,19 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short --strict-markers -p no:warnings"
+markers = [
+    "unit: fast, no external dependencies",
+    "integration: requires live services (DB, Redis, LLM)",
+    "e2e: full stack end-to-end tests",
+    "slow: takes more than 5 seconds",
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["agent", "api", "connectors", "sandbox", "schema", "llm", "dashboard", "reports", "storage"]
+omit = ["*/tests/*", "scripts/*", "eval/*", "frontend/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 80

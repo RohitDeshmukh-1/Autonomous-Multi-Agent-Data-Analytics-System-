@@ -1,0 +1,14 @@
+[build]
+builder = "nixpacks"
+buildCommand = "pip install -r requirements.txt && python scripts/download_model.py"
+
+[deploy]
+startCommand = "uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "on-failure"
+restartPolicyMaxRetries = 5
+
+[env]
+PYTHONUNBUFFERED = "1"
+PORT = "8000"

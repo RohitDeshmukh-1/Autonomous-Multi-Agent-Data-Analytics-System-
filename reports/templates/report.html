@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; font-size: 13px; line-height: 1.6; }
+
+    header {
+      background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+      color: white;
+      padding: 32px 40px 24px;
+      margin-bottom: 32px;
+    }
+    header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    header .meta { font-size: 11px; opacity: 0.75; }
+
+    .container { padding: 0 40px 40px; }
+
+    .query-block {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 28px;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+    .query-header {
+      background: #f7fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .query-header .question { font-weight: 600; font-size: 13px; color: #2d3748; }
+    .query-header .badge {
+      font-size: 10px; font-weight: 600; padding: 2px 8px;
+      border-radius: 999px; text-transform: uppercase;
+    }
+    .badge-sql { background: #ebf8ff; color: #2b6cb0; }
+    .badge-pandas { background: #f0fff4; color: #276749; }
+
+    .query-body { padding: 16px; }
+
+    .insight-box {
+      background: #fffbeb;
+      border-left: 4px solid #f6ad55;
+      padding: 10px 14px;
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+
+    .code-block {
+      background: #1a202c;
+      color: #e2e8f0;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin-bottom: 14px;
+    }
+
+    table.result-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    table.result-table th {
+      background: #2d3748;
+      color: #fff;
+      padding: 6px 10px;
+      text-align: left;
+      font-weight: 600;
+    }
+    table.result-table td {
+      padding: 5px 10px;
+      border-bottom: 1px solid #edf2f7;
+    }
+    table.result-table tr:nth-child(even) td { background: #f7fafc; }
+
+    .meta-row {
+      display: flex;
+      gap: 16px;
+      font-size: 10px;
+      color: #718096;
+      margin-top: 10px;
+    }
+
+    footer {
+      margin-top: 40px;
+      border-top: 1px solid #e2e8f0;
+      padding: 16px 40px;
+      font-size: 10px;
+      color: #a0aec0;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>{{ title }}</h1>
+  <div class="meta">Session: {{ session_id }} &nbsp;·&nbsp; Generated: {{ generated_at }}</div>
+</header>
+
+<div class="container">
+  {% if not queries %}
+    <p style="color:#718096;">No queries were recorded in this session.</p>
+  {% endif %}
+
+  {% for q in queries %}
+  <div class="query-block">
+    <div class="query-header">
+      <span class="question">{{ loop.index }}. {{ q.user_query }}</span>
+      <span class="badge badge-{{ q.code_type }}">{{ q.code_type }}</span>
+    </div>
+
+    <div class="query-body">
+      {% if q.insight_text %}
+      <div class="insight-box">{{ q.insight_text }}</div>
+      {% endif %}
+
+      {% if q.generated_code %}
+      <div class="code-block">{{ q.generated_code }}</div>
+      {% endif %}
+
+      {% if q.result_preview %}
+        {% set rows = q.result_preview %}
+        {% if rows and rows | length > 0 %}
+        <table class="result-table">
+          <thead>
+            <tr>
+              {% for col in rows[0].keys() %}
+              <th>{{ col }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows[:10] %}
+            <tr>
+              {% for val in row.values() %}
+              <td>{{ val }}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% if rows | length > 10 %}
+        <p style="font-size:10px;color:#718096;margin-top:4px;">
+          Showing 10 of {{ rows | length }} rows.
+        </p>
+        {% endif %}
+        {% endif %}
+      {% endif %}
+
+      <div class="meta-row">
+        {% if q.latency_ms %}<span>⏱ {{ q.latency_ms }}ms</span>{% endif %}
+        {% if q.retry_count %}<span>🔄 {{ q.retry_count }} correction(s)</span>{% endif %}
+        {% if q.created_at %}<span>🕒 {{ q.created_at }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<footer>
+  Cloud Data Analyst Agent &nbsp;·&nbsp; {{ generated_at }}
+</footer>
+
+</body>
+</html>
