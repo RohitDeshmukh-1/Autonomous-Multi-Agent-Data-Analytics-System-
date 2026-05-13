@@ -1,174 +1,81 @@
-# Cloud Data Analyst Agent v2.0
-
-A full-stack, AI-powered data analyst that accepts natural language questions about your data and returns SQL/Pandas code, results, charts, and analytical insights — all orchestrated by a **self-correcting LangGraph agent** with **real-time observability**, **multi-turn conversations**, and **proactive anomaly detection**.
-
-## ✨ What's New in v2.0
-
-| Feature | Description |
-|---------|-------------|
-| 🧠 **Multi-Turn Conversations** | Follow-up queries like "now filter that to Q4" or "break it down by region" |
-| 🔍 **Anomaly Detection** | Proactive statistical analysis — outliers, spikes, null concentrations |
-| 📊 **Agent Trace Visualization** | Real-time pipeline view showing each node's status and latency |
-| 🎯 **Query Explainability** | "Show Your Work" panel with query plan, complexity, self-correction chain |
-| 📈 **Data Profiler** | One-click dataset overview with type inference, distributions, correlations |
-| 📉 **Metrics Dashboard** | p50/p95/p99 latencies, cache hit ratios, self-correction rates |
-| ⚡ **Connection Pooling** | ~1-2s faster per query via warm DB connections |
-| 🔒 **Free Embeddings** | Local sentence-transformers (no API key, no cost) |
-| 🛡️ **Rate Limiting** | slowapi-based request throttling for production |
-
-## Architecture
-
 ```
-User query
-    │
-    ▼
-FastAPI (SSE stream with trace events)
-    │
-    ▼
-LangGraph Agent (traced, self-correcting)
-    ├── Intent Router        (Groq llama-3.1-8b)
-    ├── Memory Retriever     (pgvector cosine search)
-    ├── Query Planner        (schema-aware, conversation-aware)
-    ├── SQL / Pandas Gen     (Groq llama-3.1-70b, multi-turn context)
-    ├── Safety Validator     (sqlglot AST + RestrictedPython)
-    ├── Executor             (Neon / SQLite / Pandas sandbox)
-    ├── Error Classifier →
-    │   Self Corrector  (up to 3 retries)
-    ├── Insight Synthesizer  (Groq)
-    ├── Anomaly Detector     (Z-score, spike detection, null analysis)
-    ├── Visualizer           (Plotly JSON)
-    └── Memory Updater       (pgvector write)
+      ___           ___           ___           ___           ___     
+     /  /\         /  /\         /  /\         /  /\         /  /\    
+    /  /::\       /  /::\       /  /::\       /  /::\       /  /::\   
+   /  /:/\:\     /  /:/\:\     /  /:/\:\     /  /:/\:\     /  /:/\:\  
+  /  /:/~/:/    /  /:/  \:\   /  /:/  \:\   /  /:/  \:\   /  /:/~/:/  
+ /__/:/ /:/___ /__/:/ \__\:\ /__/:/ \__\:\ /__/:/ \__\:\ /__/:/ /:/___
+ \  \:\/:::::/ \  \:\ /  /:/ \  \:\ /  /:/ \  \:\ /  /:/ \  \:\/:::::/
+  \  \::/~~~~   \  \:\  /:/   \  \:\  /:/   \  \:\  /:/   \  \::/~~~~ 
+   \  \:\        \  \:\/:/     \  \:\/:/     \  \:\/:/     \  \:\     
+    \  \:\        \  \::/       \  \::/       \  \::/       \  \:\    
+     \__\/         \__\/         \__\/         \__\/         \__\/    
 
-React + Tailwind frontend  ←→  FastAPI backend
+           A U T O N O M O U S   D A T A   A N A L Y S T
 ```
 
-## Tech Stack (100% Free Tier)
+# Technical Architecture and System Design
 
-| Layer | Service | Free tier |
-|-------|---------|-----------| 
-| LLM inference | [Groq](https://console.groq.com) | ✅ 30 req/min |
-| Embeddings | **Local** (sentence-transformers) | ✅ No API key needed |
-| Database + pgvector | [Neon](https://neon.tech) | ✅ 0.5 GB |
-| Cache | [Upstash Redis](https://upstash.com) | ✅ 10K req/day |
-| File storage | [Supabase Storage](https://supabase.com) | ✅ 1 GB |
-| Backend hosting | [Railway](https://railway.app) | ✅ $5 credit / mo |
-| Frontend hosting | [Railway / Vercel](https://railway.app) | ✅ Free |
+This project implements a high-performance, self-correcting autonomous agent for complex data analysis. It leverages an orchestrated multi-agent workflow to transform natural language queries into executable code (SQL or Pandas), validate the output for security and correctness, and synthesize multi-dimensional insights with proactive anomaly detection.
 
+## System Overview
 
-## Local Development
+The system is designed as a directed acyclic graph (DAG) of specialized nodes, managed by a central state machine. Unlike simple linear pipelines, this architecture supports iterative self-correction, multi-turn conversational context, and asynchronous observability.
 
-### 1. Prerequisites
+### Core Components
 
-- Python 3.11+
-- Node.js 20+
-- Groq, Neon, Upstash, Supabase API keys (see `.env.example`)
-- **No embedding API key needed** — embeddings run locally
+#### 1. Language Model Orchestration
+The system utilizes a dual-model approach via Groq for low-latency inference:
+- **Planner/Router**: Llama-3.1-8b handles intent classification and high-level query planning.
+- **Generator/Synthesizer**: Llama-3.1-70b handles complex code generation and multi-variable insight synthesis.
 
-### 2. Backend
+#### 2. Vector-Enhanced Schema Retrieval
+To handle large-scale database schemas without overflowing the LLM context window, the system implements a RAG (Retrieval-Augmented Generation) pattern for metadata:
+- **Local Embeddings**: Uses `sentence-transformers/all-mpnet-base-v2` locally to generate 768-dimensional vectors.
+- **pgvector Integration**: Stores table/column summaries in a Neon Postgres database.
+- **Semantic Mapping**: Queries are embedded and compared against the schema vector space to retrieve only the most relevant tables and relationships for the specific request.
 
-```bash
-# Clone and set up environment
-cp .env.example .env
-# Fill in keys (Groq, Neon, Upstash, Supabase — no Together AI needed)
+#### 3. State-Machine Driven Workflow (LangGraph)
+The agent pipeline is structured into distinct nodes:
+- **Intent Router**: Determines if the query requires SQL, Pandas analysis, or a general system response.
+- **Memory Retriever**: Injects context from previous turns using cosine similarity over the conversation history.
+- **Query Planner**: Formulates an execution strategy, identifying necessary joins, aggregations, and filtering logic.
+- **Generator**: Produces the primary execution code (Postgres-dialect SQL or Python-Pandas).
+- **Safety Validator**: Performs abstract syntax tree (AST) analysis via `sqlglot` and `RestrictedPython` to block unauthorized commands (DML/DDL) and unsafe system calls.
+- **Self-Correction Loop**: If execution fails, an error classifier captures the traceback and feeds it back into the generator for up to three repair attempts.
 
-# Install dependencies
-pip install -r requirements.txt
+## Technical Optimizations
 
-# Run database migrations
-psql $NEON_DATABASE_URL -f scripts/migrate.sql
+### High-Performance Infrastructure
+- **Threaded Connection Pooling**: A singleton-based `ThreadedConnectionPool` manages database connections to Neon, eliminating the overhead of repeated TLS handshakes.
+- **Pre-baked Embedding Cache**: The embedding model is baked into the production Docker image, ensuring instant cold starts and zero runtime download latency.
+- **In-Memory Caching**: Implements LRU (Least Recently Used) caching for both schema context and embedding computations to accelerate repeated query patterns.
 
-# (Optional) Seed demo e-commerce data
-python scripts/seed_demo.py
+### Observability and Metrics
+The system provides deep observability via a real-time tracing engine:
+- **Node-Level Tracing**: Captures start/end timestamps, token usage, and status for every node in the graph.
+- **SSE Streaming**: Broadcasts trace events to the frontend via Server-Sent Events, enabling live pipeline visualization.
+- **System Metrics**: Tracks p50/p95/p99 latencies, cache hit ratios, and autonomous correction rates to monitor system health and LLM efficiency.
 
-# Start API server
-uvicorn api.main:app --reload --port 8000
-```
+## Security Architecture
 
-> ⏳ First startup downloads the embedding model (~420MB). Subsequent starts are instant.
+Security is enforced at multiple layers to allow safe execution of LLM-generated code:
+- **SQL Sanitization**: Uses `sqlglot` to parse generated SQL into an AST, ensuring only `SELECT` operations are performed.
+- **Python Sandboxing**: Executes Pandas code in a restricted environment using `RestrictedPython`, blocking access to the filesystem, network, and sensitive built-ins.
+- **Read-Only Database Sessions**: Database connections are forced into `SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY` mode at the driver level as a final failsafe.
 
-API docs at: http://localhost:8000/docs
+## Proactive Data Intelligence
 
-### 3. Frontend
+Beyond reactive query answering, the system implements proactive nodes:
+- **Anomaly Detection Engine**: Runs parallel statistical tests (Z-score for outliers, trend analysis for spikes, and null-concentration checks) on every result set to surface insights the user may not have explicitly requested.
+- **Data Profiling Node**: Performs comprehensive statistical analysis of new datasets, including cardinality checks, type inference, and cross-column correlation matrices.
 
-```bash
-cd frontend
-npm install
-cp ../.env.example .env.local
-# Set VITE_API_BASE_URL=http://localhost:8000
+## Deployment Stack
 
-npm run dev
-# Frontend at http://localhost:5173
-```
-
-## Project Structure
-
-```
-├── agent/              LangGraph agent nodes + graph
-│   ├── graph.py        Traced agent pipeline
-│   ├── trace.py        Real-time execution tracing
-│   ├── metrics.py      In-memory metrics collector
-│   └── nodes/
-│       ├── anomaly_detector.py   Proactive anomaly detection
-│       ├── data_profiler.py      Dataset profiling engine
-│       └── ...                   All other pipeline nodes
-├── api/                FastAPI routers + main app
-│   └── routers/
-│       ├── metrics.py  Observability endpoint
-│       ├── profile.py  Data profiling endpoint
-│       └── ...
-├── connectors/         Neon, CSV, SQLite, Sheets connectors
-├── dashboard/          Dashboard panel persistence
-├── db/                 Connection pooling
-├── eval/               Evaluation dataset + runner
-├── frontend/           React + Tailwind + Plotly UI
-│   └── src/pages/
-│       ├── MetricsPage.tsx   Observability dashboard
-│       ├── ProfilePage.tsx   Data profiler UI
-│       └── ...
-├── llm/                Groq client + local embeddings
-├── reports/            PDF generator (WeasyPrint + Jinja2)
-├── sandbox/            SQL (sqlglot) + Python (RestrictedPython)
-├── schema/             Schema ingestion + pgvector retrieval
-├── scripts/            migrate.sql, seed_demo.py
-├── storage/            Supabase Storage helpers
-├── render.yaml         Render deployment spec
-└── requirements.txt
-```
-
-## API Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/api/query/run` | Run agent, return full JSON result with trace |
-| `POST` | `/api/query/stream` | SSE stream: trace events + insight tokens |
-| `POST` | `/api/upload/file` | Upload CSV/SQLite, ingest schema |
-| `GET` | `/api/history/{session_id}` | List query history |
-| `DELETE` | `/api/history/{id}` | Delete history record |
-| `POST` | `/api/dashboard/panel` | Pin chart to dashboard |
-| `GET` | `/api/dashboard/panel/{user_id}` | List dashboard panels |
-| `DELETE` | `/api/dashboard/panel/{id}` | Remove panel |
-| `POST` | `/api/report/generate` | Download PDF report |
-| `POST` | `/api/schema/ingest` | Re-ingest connector schema |
-| `GET` | `/api/schema/{connector_id}` | Get schema summary |
-| `GET` | `/api/metrics/` | System observability metrics |
-| `POST` | `/api/profile/` | Generate data profile |
-| `GET` | `/health` | Health check |
-
-## Security Model
-
-| Layer | Mechanism |
-|-------|-----------|
-| SQL | sqlglot AST — blocks all DML/DDL (DROP, DELETE, UPDATE, INSERT, …) |
-| Python | RestrictedPython + AST walk — no filesystem, os, subprocess, socket |
-| DB | Neon read-only session (`SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY`) |
-| API | CORS origin whitelist + slowapi rate limiting |
-| Embeddings | Fully local — no data sent to third-party embedding APIs |
-
-## Key Differentiators
-
-1. **Self-Correcting Agent** — Automatically fixes broken SQL/Python up to 3 times
-2. **Multi-Turn Context** — Follow-up queries reference previous results
-3. **Real-Time Observability** — Live pipeline trace + latency/token metrics
-4. **Proactive Anomaly Detection** — Surfaces statistical insights you didn't ask for
-5. **Production Security** — AST-level code validation, read-only DB, rate limiting
-6. **100% Free Stack** — Every service uses free tiers, including local embeddings
+The architecture is optimized for a containerized, cloud-agnostic deployment:
+- **Backend**: FastAPI / Python 3.11
+- **Orchestration**: LangGraph
+- **Database**: Neon (Postgres + pgvector)
+- **Caching**: Upstash (Redis)
+- **Hosting**: Railway (via Docker)
+- **CI/CD**: GitHub Actions for automated testing and deployment triggers.
