@@ -1,4 +1,3 @@
-```
       ___           ___           ___           ___           ___     
      /  /\         /  /\         /  /\         /  /\         /  /\    
     /  /::\       /  /::\       /  /::\       /  /::\       /  /::\   
@@ -12,15 +11,43 @@
      \__\/         \__\/         \__\/         \__\/         \__\/    
 
            A U T O N O M O U S   D A T A   A N A L Y S T
-```
 
 # Technical Architecture and System Design
 
 This project implements a high-performance, self-correcting autonomous agent for complex data analysis. It leverages an orchestrated multi-agent workflow to transform natural language queries into executable code (SQL or Pandas), validate the output for security and correctness, and synthesize multi-dimensional insights with proactive anomaly detection.
 
-## System Overview
+## System Architecture
 
-The system is designed as a directed acyclic graph (DAG) of specialized nodes, managed by a central state machine. Unlike simple linear pipelines, this architecture supports iterative self-correction, multi-turn conversational context, and asynchronous observability.
+```mermaid
+graph TD
+    Client[Frontend Client - Vite/React] -->|REST / SSE| API[FastAPI Backend]
+    
+    subgraph Data Analyst Agent [LangGraph Orchestrator]
+        API --> AgentRouter{Intent Router}
+        AgentRouter -->|Data Request| Planner[Query Planner]
+        AgentRouter -->|General| Synthesizer[Synthesizer / Chat]
+        
+        Planner --> RAG[Vector-Enhanced Schema Retrieval]
+        RAG --> Generator[Code Generator SQL/Pandas]
+        
+        Generator --> Validator[Safety & AST Validator]
+        Validator -->|Failed| SelfCorrect[Self-Correction Loop]
+        SelfCorrect --> Generator
+        
+        Validator -->|Passed| Executor[Execution Engine]
+        Executor --> AnomalyDetection[Proactive Anomaly Detection]
+        AnomalyDetection --> Synthesizer
+    end
+    
+    subgraph External Services
+        Generator --> Groq[Groq LLaMA 3.1 70B]
+        Planner --> GroqPlanner[Groq LLaMA 3.1 8B]
+        RAG -.-> |Semantic Search| Neon[Neon DB w/ pgvector]
+        Executor -.-> |Read-Only Query| Neon
+        API --> Upstash[Upstash Redis Cache]
+        API --> Supabase[Supabase Storage]
+    end
+```
 
 ### Core Components
 
@@ -79,3 +106,43 @@ The architecture is optimized for a containerized, cloud-agnostic deployment:
 - **Caching**: Upstash (Redis)
 - **Hosting**: Railway (via Docker)
 - **CI/CD**: GitHub Actions for automated testing and deployment triggers.
+
+## Setup & Testing with Real Data
+
+Follow these instructions to run the project locally.
+
+1. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Configure Environment Variables**
+   Copy `.env.example` to `.env` and fill in the requisite API keys (Groq, Neon DB, Upstash, Supabase).
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Database Migrations**
+   Run the migration script to establish pgvector support and create necessary tables for history and embeddings.
+   ```bash
+   psql $NEON_DATABASE_URL -f scripts/migrate.sql
+   ```
+
+4. **Seed the Database (Demo E-Commerce Data)**
+   Run the demo seed script which generates comprehensive e-commerce tables (products, customers, orders).
+   ```bash
+   python scripts/seed_demo.py
+   ```
+
+5. **Start API Server**
+   ```bash
+   uvicorn api.main:app --reload
+   ```
+
+6. **Start Frontend Client**
+   In a separate terminal:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
