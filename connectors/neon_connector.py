@@ -1,11 +1,14 @@
 """
 connectors/neon_connector.py
-Connects to Neon serverless Postgres. Uses connection pool.
+Connects to Postgres databases (Neon, RDS, GCP Cloud SQL, Azure, self-hosted).
+Supports standard connection pool or secure direct isolated user-supplied connection strings.
 """
 
+from contextlib import contextmanager
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
+import psycopg2
 import psycopg2.extras
 
 from connectors.base import BaseConnector
@@ -13,11 +16,19 @@ from db.pool import pooled_connection, pooled_cursor
 
 
 class NeonConnector(BaseConnector):
-    def __init__(self, schema: str = "public"):
+    def __init__(self, schema: str = "public", db_url: Optional[str] = None):
         self.schema = schema
+        self.db_url = db_url
+
+    @contextmanager
+    def _cursor(self, dict_cursor: bool = True):
+        """Securely manages and isolates read-only database connections using dynamic pools."""
+        # Connect using the global high-performance pool, passing db_url if custom
+        with pooled_cursor(readonly=True, dict_cursor=dict_cursor, db_url=self.db_url) as (cur, conn):
+            yield cur
 
     def get_schema(self) -> List[Dict[str, Any]]:
-        with pooled_cursor(readonly=True, dict_cursor=True) as (cur, conn):
+        with self._cursor(dict_cursor=True) as cur:
             cur.execute(
                 """
                 SELECT
@@ -64,7 +75,7 @@ class NeonConnector(BaseConnector):
             return result
 
     def execute_sql(self, sql: str) -> List[Dict[str, Any]]:
-        with pooled_cursor(readonly=True, dict_cursor=True) as (cur, conn):
+        with self._cursor(dict_cursor=True) as cur:
             cur.execute(sql)
             rows = cur.fetchall()
             return [dict(r) for r in rows]
@@ -72,7 +83,7 @@ class NeonConnector(BaseConnector):
     def load_dataframe(self, table: Optional[str] = None) -> pd.DataFrame:
         if table:
             import os
-            db_url = os.environ["NEON_DATABASE_URL"]
+            db_url = self.db_url or os.environ["NEON_DATABASE_URL"]
             return pd.read_sql(
                 f'SELECT * FROM "{self.schema}"."{table}" LIMIT 100000',
                 db_url,

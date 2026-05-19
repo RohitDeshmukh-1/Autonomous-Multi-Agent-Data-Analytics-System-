@@ -24,15 +24,15 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="px-5 py-3 border-b border-gray-800 bg-gray-900 flex-shrink-0">
-        <h1 className="text-sm font-semibold text-gray-100">Dashboard</h1>
-        <p className="text-xs text-gray-500 mt-0.5">Pinned charts from your sessions</p>
+      <header className="px-5 py-3 border-b border-neutral-900 bg-[#09090b] flex-shrink-0">
+        <h1 className="text-sm font-semibold text-neutral-100">Dashboard</h1>
+        <p className="text-xs text-neutral-500 mt-0.5">Pinned charts from your sessions</p>
       </header>
 
       <div className="flex-1 overflow-y-auto p-5">
         {loading && (
           <div className="flex items-center justify-center h-40">
-            <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-neutral-200 border-t-transparent rounded-full animate-spin" />
           </div>
         )}
 

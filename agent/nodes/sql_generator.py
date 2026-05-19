@@ -40,7 +40,7 @@ def _build_conversation_context(history: list) -> str:
 def sql_generator(state: AgentState) -> AgentState:
     client = get_groq_client()
 
-    dialect = "postgres" if state["connector_id"].startswith("neon") else "sqlite"
+    dialect = "postgres" if state["connector_id"].startswith(("neon", "postgres-enc")) else "sqlite"
 
     conv_context = _build_conversation_context(
         state.get("conversation_history", [])

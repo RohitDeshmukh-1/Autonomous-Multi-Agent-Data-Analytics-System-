@@ -15,16 +15,15 @@ _BLOCKED_TYPES = (
     exp.Delete,
     exp.Update,
     exp.Insert,
-    exp.Alter,        # covers ALTER TABLE
+    exp.AlterTable,        # covers ALTER TABLE
     exp.Create,
     exp.Command,      # covers arbitrary COPY, VACUUM, etc.
     exp.Transaction,
-    exp.Grant,
 )
 
 # Also block by class name for newer sqlglot versions that add new node types
 _BLOCKED_CLASS_NAMES = {
-    "TruncateTable", "Truncate", "Revoke", "AlterTable",
+    "TruncateTable", "Truncate", "Revoke", "AlterTable", "Grant",
 }
 
 # Blocked function names (extra caution)

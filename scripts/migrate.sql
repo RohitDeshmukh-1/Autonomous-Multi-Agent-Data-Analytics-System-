@@ -30,13 +30,13 @@ CREATE TABLE IF NOT EXISTS query_history (
 );
 CREATE INDEX IF NOT EXISTS idx_query_history_session ON query_history(session_id);
 
--- ── Schema embeddings (pgvector, 768-dim for m2-bert) ─────────────────────────
+-- ── Schema embeddings (pgvector, 384-dim for MiniLM-L6-v2) ───────────────────
 CREATE TABLE IF NOT EXISTS schema_embeddings (
     id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     connector_id   TEXT NOT NULL,
     table_name     TEXT NOT NULL,
     column_summary TEXT,
-    embedding      vector(768),
+    embedding      vector(384),
     created_at     TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_schema_emb_connector
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS memory_embeddings (
     query        TEXT NOT NULL,
     insight      TEXT,
     table_names  TEXT[],
-    embedding    vector(768),
+    embedding    vector(384),
     created_at   TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_memory_emb_session

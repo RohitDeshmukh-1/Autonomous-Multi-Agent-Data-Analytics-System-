@@ -43,6 +43,18 @@ def get_connector(connector_id: str) -> BaseConnector:
         schema = connector_id.split(":", 1)[1]
         return NeonConnector(schema=schema)
 
+    if connector_id.startswith("postgres-enc:"):
+        from connectors.neon_connector import NeonConnector
+        from connectors.crypto import decrypt_connection_string
+        
+        # Format is: postgres-enc:<base64_encrypted_db_url>[:schema_name]
+        parts = connector_id.split(":")
+        payload = parts[1]
+        schema = parts[2] if len(parts) > 2 else "public"
+        
+        db_url = decrypt_connection_string(payload)
+        return NeonConnector(schema=schema, db_url=db_url)
+
     if connector_id.startswith("csv:"):
         from connectors.csv_connector import CsvConnector
         url = connector_id.split(":", 1)[1]

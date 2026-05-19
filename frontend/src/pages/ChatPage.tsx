@@ -114,9 +114,9 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="flex items-center justify-between px-5 py-3 border-b border-gray-800 bg-gray-900 flex-shrink-0">
+      <header className="flex items-center justify-between px-5 py-3 border-b border-neutral-900 bg-[#09090b] flex-shrink-0">
         <div className="flex items-center gap-3">
-          <h1 className="text-sm font-semibold text-gray-100">Chat</h1>
+          <h1 className="text-sm font-semibold text-neutral-100">Chat</h1>
           <ConnectorSelector onChange={setConnector} />
         </div>
         <div className="flex items-center gap-2">
@@ -137,14 +137,14 @@ export default function ChatPage() {
       <div className="flex-1 overflow-y-auto px-5 py-6 space-y-6">
         {messages.length === 0 && !loading && (
           <div className="max-w-xl mx-auto mt-12">
-            <h2 className="text-xl font-semibold text-gray-200 text-center mb-2">Ask anything about your data</h2>
-            <p className="text-sm text-gray-500 text-center mb-8">Connected to: <span className="text-brand-400">{connector}</span></p>
+            <h2 className="text-xl font-semibold text-neutral-200 text-center mb-2">Ask anything about your data</h2>
+            <p className="text-xs text-neutral-500 text-center mb-8">Connected to: <span className="text-neutral-300 font-mono">{connector}</span></p>
             <div className="grid grid-cols-1 gap-2">
               {SUGGESTIONS.map((s) => (
                 <button
                   key={s}
                   onClick={() => submit(s)}
-                  className="text-left px-4 py-3 card hover:border-brand-600/50 hover:bg-gray-800/50 text-sm text-gray-400 hover:text-gray-200 transition-all"
+                  className="text-left px-4 py-3 card hover:border-neutral-700 hover:bg-neutral-900/50 text-sm text-neutral-400 hover:text-neutral-200 transition-all"
                 >
                   {s}
                 </button>
@@ -187,8 +187,8 @@ export default function ChatPage() {
       </div>
 
       {/* Input bar */}
-      <div className="flex-shrink-0 px-5 py-4 border-t border-gray-800 bg-gray-900">
-        <div className="flex items-end gap-3 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 focus-within:border-brand-500 transition-colors">
+      <div className="flex-shrink-0 px-5 py-4 border-t border-neutral-900 bg-[#09090b]">
+        <div className="flex items-end gap-3 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3.5 focus-within:border-neutral-700 transition-colors">
           <textarea
             ref={textareaRef}
             rows={1}
@@ -196,19 +196,19 @@ export default function ChatPage() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask a question about your data…"
-            className="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 resize-none outline-none max-h-32"
+            className="flex-1 bg-transparent text-sm text-neutral-100 placeholder-neutral-600 resize-none outline-none max-h-32"
           />
           <button
             onClick={() => submit(input)}
             disabled={!input.trim() || loading}
-            className="flex-shrink-0 w-8 h-8 bg-brand-600 hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg flex items-center justify-center transition-colors"
+            className="flex-shrink-0 w-8 h-8 bg-neutral-100 hover:bg-neutral-200 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg flex items-center justify-center transition-colors"
           >
             {loading
-              ? <RefreshCw size={14} className="text-white animate-spin" />
-              : <Send size={14} className="text-white" />}
+              ? <RefreshCw size={14} className="text-neutral-950 animate-spin" />
+              : <Send size={14} className="text-neutral-950" />}
           </button>
         </div>
-        <p className="text-xs text-gray-600 mt-2 text-center">Press Enter to send · Shift+Enter for new line · Follow-up queries supported</p>
+        <p className="text-[10px] text-neutral-600 mt-2 text-center font-mono">Press Enter to send · Shift+Enter for new line · Follow-up queries supported</p>
       </div>
     </div>
   )

@@ -4,38 +4,40 @@ export default {
   theme: {
     extend: {
       colors: {
-        gray: {
-          950: '#030712',
-          900: '#111827',
-          800: '#1f2937',
-          750: '#2d3748',
-        },
         brand: {
           50:  '#eef2ff',
           100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
           400: '#818cf8',
           500: '#6366f1',
           600: '#4f46e5',
           700: '#4338ca',
-          900: '#1e1b4b',
+          800: '#3730a3',
+          900: '#312e81',
+          950: '#1e1b4b',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        sans: ['"Inter"', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
       },
       animation: {
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'float': 'float 3s ease-in-out infinite',
+        'float': 'float 6s ease-in-out infinite',
+        'glow': 'glow 2s ease-in-out infinite alternate',
       },
       keyframes: {
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-5px)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        glow: {
+          '0%': { opacity: 0.5, transform: 'scale(1)' },
+          '100%': { opacity: 1, transform: 'scale(1.05)' },
         }
       }
     },
   },
   plugins: [],
 }
-

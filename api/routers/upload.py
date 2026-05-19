@@ -80,3 +80,56 @@ async def upload_data_file(
         file_type=file_kind,
         tables_ingested=n,
     )
+
+
+class DatabaseConnectionRequest(BaseModel):
+    url: str
+    schema_name: str = "public"
+
+
+class DatabaseConnectionResponse(BaseModel):
+    connector_id: str
+    tables_ingested: int
+    status: str
+
+
+@router.post("/connect-db", response_model=DatabaseConnectionResponse)
+async def connect_database(req: DatabaseConnectionRequest):
+    url = req.url.strip()
+    if not url.startswith(("postgresql://", "postgres://")):
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported protocol. Only standard PostgreSQL/Postgres URIs are supported."
+        )
+
+    # Validate connectivity in an isolated read-only cursor
+    from connectors.crypto import encrypt_connection_string
+    from connectors.neon_connector import NeonConnector
+
+    try:
+        connector = NeonConnector(schema=req.schema_name, db_url=url)
+        # Test schema fetch to ensure credentials work
+        connector.get_schema()
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Database connection failed: {e}. Please ensure your database is publicly accessible and credentials are correct."
+        )
+
+    encrypted_url = encrypt_connection_string(url)
+    connector_id = f"postgres-enc:{encrypted_url}:{req.schema_name}"
+
+    # Ingest schema metadata into the vector search memory safely
+    try:
+        n = ingest_schema(connector_id)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to index database schemas: {exc}"
+        )
+
+    return DatabaseConnectionResponse(
+        connector_id=connector_id,
+        tables_ingested=n,
+        status="connected",
+    )

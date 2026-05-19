@@ -28,10 +28,10 @@ export default function MetricsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="flex items-center justify-between px-5 py-3 border-b border-gray-800 bg-gray-900 flex-shrink-0">
+      <header className="flex items-center justify-between px-5 py-3 border-b border-neutral-900 bg-[#09090b] flex-shrink-0">
         <div>
-          <h1 className="text-sm font-semibold text-gray-100">System Metrics</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Real-time observability dashboard</p>
+          <h1 className="text-sm font-semibold text-neutral-100">System Metrics</h1>
+          <p className="text-xs text-neutral-500 mt-0.5">Real-time observability dashboard</p>
         </div>
         <button onClick={refresh} className="btn-ghost text-xs">
           <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
@@ -41,7 +41,7 @@ export default function MetricsPage() {
       <div className="flex-1 overflow-y-auto p-5">
         {!metrics ? (
           <div className="flex items-center justify-center h-40">
-            <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-neutral-200 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <div className="space-y-6 max-w-4xl mx-auto">
@@ -77,11 +77,11 @@ export default function MetricsPage() {
               <h3 className="text-sm font-semibold text-gray-200 mb-3">Intent Distribution</h3>
               <div className="flex gap-3 flex-wrap">
                 {Object.entries(metrics.intents).map(([intent, count]) => (
-                  <div key={intent} className="flex items-center gap-2 bg-gray-800 rounded-lg px-3 py-2">
-                    <span className={`badge ${intent === 'sql' ? 'badge-sql' : intent === 'pandas' ? 'badge-pandas' : 'bg-gray-700 text-gray-300'}`}>
+                  <div key={intent} className="flex items-center gap-2 bg-[#0e0e11] border border-neutral-800/80 rounded-lg px-3 py-1.5">
+                    <span className={`badge ${intent === 'sql' ? 'badge-sql' : intent === 'pandas' ? 'badge-pandas' : 'bg-neutral-800 text-neutral-300 border-neutral-700'}`}>
                       {intent}
                     </span>
-                    <span className="text-sm text-gray-300 font-mono">{count}</span>
+                    <span className="text-xs text-neutral-400 font-mono">{count}</span>
                   </div>
                 ))}
               </div>
@@ -90,12 +90,12 @@ export default function MetricsPage() {
             {/* Error breakdown */}
             {Object.keys(metrics.errors).length > 0 && (
               <div className="card p-4">
-                <h3 className="text-sm font-semibold text-gray-200 mb-3">Error Distribution</h3>
+                <h3 className="text-sm font-semibold text-neutral-200 mb-3">Error Distribution</h3>
                 <div className="space-y-2">
                   {Object.entries(metrics.errors).map(([err, count]) => (
-                    <div key={err} className="flex items-center justify-between bg-gray-800 rounded-lg px-3 py-2">
-                      <span className="text-sm text-red-300">{err}</span>
-                      <span className="text-sm text-gray-400 font-mono">{count}</span>
+                    <div key={err} className="flex items-center justify-between bg-[#0e0e11] border border-neutral-800/80 rounded-lg px-3 py-2">
+                      <span className="text-sm text-red-300 font-mono text-[11px]">{err}</span>
+                      <span className="text-xs text-neutral-400 font-mono">{count}</span>
                     </div>
                   ))}
                 </div>

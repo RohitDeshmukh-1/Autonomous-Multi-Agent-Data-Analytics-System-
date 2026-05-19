@@ -5,6 +5,10 @@ FastAPI application — mounts all routers, configures CORS, rate limiting, life
 
 import os
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,9 +31,9 @@ async def lifespan(app: FastAPI):
     from llm import get_groq_client, get_embedder
     get_groq_client()
     # Pre-download and load embedding model (first run downloads ~420MB)
-    print("⏳ Loading embedding model (first run may download ~420MB)...")
+    print("[Lifespan] Loading embedding model (first run may download ~420MB)...")
     get_embedder()
-    print("✅ Embedding model loaded.")
+    print("[Lifespan] Embedding model loaded successfully.")
     yield
     # Shutdown: close DB pool
     try:

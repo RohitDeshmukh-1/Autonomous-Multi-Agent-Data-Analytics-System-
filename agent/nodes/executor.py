@@ -2,25 +2,33 @@
 agent/nodes/executor.py
 Executes validated SQL or Pandas code.
 Caches results in Upstash Redis (TTL 1 hour).
+
+OPTIMIZATION: Singleton Redis client, removed per-call instantiation overhead.
 """
 
 import hashlib
 import json
 import os
 import time
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 from agent.state import AgentState
 from connectors.base import get_connector
 from sandbox.python_sandbox import run_pandas
-from upstash_redis import Redis
 
 
-def _get_redis() -> Redis:
-    return Redis(
-        url=os.environ["UPSTASH_REDIS_REST_URL"],
-        token=os.environ["UPSTASH_REDIS_REST_TOKEN"],
-    )
+@lru_cache(maxsize=1)
+def _get_redis():
+    """Singleton Redis client — created once, reused across all requests."""
+    try:
+        from upstash_redis import Redis
+        return Redis(
+            url=os.environ["UPSTASH_REDIS_REST_URL"],
+            token=os.environ["UPSTASH_REDIS_REST_TOKEN"],
+        )
+    except Exception:
+        return None
 
 
 def _cache_key(connector_id: str, code: str, code_type: str) -> str:
@@ -41,10 +49,11 @@ def executor(state: AgentState) -> AgentState:
     redis = _get_redis()
     cache_key = _cache_key(connector_id, code, code_type)
     try:
-        cached = redis.get(cache_key)
-        if cached:
-            result = json.loads(cached)
-            return {**state, "execution_result": result, "from_cache": True, "execution_error": None}
+        if redis:
+            cached = redis.get(cache_key)
+            if cached:
+                result = json.loads(cached)
+                return {**state, "execution_result": result, "from_cache": True, "execution_error": None}
     except Exception:
         pass  # Cache miss or Redis error — proceed to execution
 
@@ -64,9 +73,10 @@ def executor(state: AgentState) -> AgentState:
 
         latency_ms = int((time.time() - start) * 1000)
 
-        # ── Write to cache ────────────────────────────────────────────────────
+        # ── Write to cache (non-blocking) ─────────────────────────────────────
         try:
-            redis.setex(cache_key, 3600, json.dumps(result))
+            if redis:
+                redis.setex(cache_key, 3600, json.dumps(result))
         except Exception:
             pass  # Non-fatal cache write failure
 

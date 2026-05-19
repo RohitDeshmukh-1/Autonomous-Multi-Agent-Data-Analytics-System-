@@ -15,40 +15,40 @@ export default function Layout() {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-56 flex-shrink-0 bg-gray-900 border-r border-gray-800 flex flex-col">
-        <div className="px-5 py-5 border-b border-gray-800">
+      <aside className="w-56 flex-shrink-0 bg-[#09090b] border-r border-neutral-900 flex flex-col">
+        <div className="px-5 py-5 border-b border-neutral-900">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-brand-600 rounded-lg flex items-center justify-center">
-              <Database size={14} className="text-white" />
+            <div className="w-7 h-7 bg-neutral-100 rounded flex items-center justify-center">
+              <Database size={13} className="text-neutral-950" />
             </div>
-            <span className="font-semibold text-sm text-gray-100 leading-tight">
+            <span className="font-semibold text-sm text-neutral-100 leading-tight">
               Data Analyst<br />
-              <span className="text-gray-500 font-normal">Agent</span>
+              <span className="text-neutral-500 font-normal">Agent</span>
             </span>
           </div>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-1.5">
           {nav.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
                 clsx(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border',
                   isActive
-                    ? 'bg-brand-600/20 text-brand-400'
-                    : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800'
+                    ? 'bg-[#0f0f11] text-neutral-100 border-neutral-800'
+                    : 'text-neutral-400 hover:text-neutral-100 hover:bg-[#0f0f11]/50 border-transparent hover:border-neutral-900'
                 )
               }
             >
-              <Icon size={16} />
+              <Icon size={15} className="flex-shrink-0" />
               {label}
             </NavLink>
           ))}
         </nav>
 
-        <div className="px-4 py-4 border-t border-gray-800 text-xs text-gray-600">
+        <div className="px-4 py-4 border-t border-neutral-900 text-[10px] font-mono tracking-tight text-neutral-600">
           v2.0.0 · Groq + Railway
         </div>
 

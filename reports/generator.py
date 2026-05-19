@@ -11,7 +11,10 @@ from typing import Any, Dict, List, Optional
 
 from db.pool import pooled_cursor
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML
+try:
+    from weasyprint import HTML
+except Exception:
+    HTML = None
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 
@@ -50,4 +53,6 @@ def generate_pdf(
         queries=history,
     )
 
+    if HTML is None:
+        raise RuntimeError("PDF generation is unavailable because WeasyPrint or GTK libraries are not installed on this system.")
     return HTML(string=html_str, base_url=str(TEMPLATE_DIR)).write_pdf()

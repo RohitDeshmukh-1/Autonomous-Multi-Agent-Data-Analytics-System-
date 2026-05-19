@@ -19,9 +19,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from agent.graph import get_graph
 
 DATASET = Path(__file__).parent / "datasets" / "queries.json"
-PASS = "✅"
-FAIL = "❌"
-WARN = "⚠️ "
+PASS = "PASS"
+FAIL = "FAIL"
+WARN = "WARN"
 
 
 def run_eval():
@@ -29,7 +29,7 @@ def run_eval():
     graph = get_graph()
     results = []
 
-    print(f"\nRunning {len(cases)} eval cases…\n")
+    print(f"\nRunning {len(cases)} eval cases...\n")
 
     for case in cases:
         state = {
@@ -69,9 +69,10 @@ def run_eval():
             has_result = bool(result.get("execution_result")) or result.get("intent") == "unsupported"
             no_error = not result.get("execution_error")
 
-            insight = result.get("insight_text", "")
+            insight = result.get("insight_text") or ""
+            code = result.get("generated_code") or ""
             contains_ok = all(
-                kw.lower() in insight.lower() or kw.lower() in result.get("generated_code", "").lower()
+                kw.lower() in insight.lower() or kw.lower() in code.lower()
                 for kw in case.get("expected_contains", [])
             )
 
@@ -88,6 +89,7 @@ def run_eval():
                 "latency_ms": elapsed,
                 "passed": passed,
                 "status": status,
+                "exec_error": result.get("execution_error")
             })
 
         except Exception as exc:
@@ -106,16 +108,20 @@ def run_eval():
 
     # Print table
     print(f"{'ID':<5} {'Status':<4} {'Intent':<12} {'Fixes':<6} {'Warns':<6} {'ms':<7} Query")
-    print("─" * 90)
+    print("-" * 90)
     for r in results:
         print(
             f"{r['id']:<5} {r['status']:<4} {r['intent']:<12} {r['corrections']:<6} "
             f"{r.get('anomalies', 0):<6} {r['latency_ms']:<7} {r['query']}"
         )
+        if r.get("error"):
+            print(f"      -> SYS ERROR: {r['error']}")
+        if r.get("exec_error"):
+            print(f"      -> DB ERROR: {r['exec_error']}")
 
     passed = sum(1 for r in results if r["passed"])
     avg_lat = sum(r["latency_ms"] for r in results) // len(results)
-    print(f"\n{'─' * 90}")
+    print(f"\n{'-' * 90}")
     print(f"Passed: {passed}/{len(results)} ({100 * passed // len(results)}%) | Avg Latency: {avg_lat}ms")
     return passed == len(results)
 

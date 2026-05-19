@@ -166,6 +166,25 @@ export async function uploadFile(file: File, userId = 'anonymous'): Promise<{ co
   return res.json()
 }
 
+export async function connectDatabase(url: string, schemaName = 'public'): Promise<{ connector_id: string; tables_ingested: number }> {
+  const res = await fetch(`${BASE}/api/upload/connect-db`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url, schema_name: schemaName }),
+  })
+  if (!res.ok) {
+    let errMsg = 'Connection failed'
+    try {
+      const data = await res.json()
+      errMsg = data.detail || errMsg
+    } catch {
+      errMsg = await res.text() || errMsg
+    }
+    throw new Error(errMsg)
+  }
+  return res.json()
+}
+
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 
 export async function getPanels(userId: string): Promise<Panel[]> {

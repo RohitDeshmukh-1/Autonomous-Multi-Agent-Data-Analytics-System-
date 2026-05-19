@@ -1,43 +1,43 @@
 [
   {
     "id": "001",
-    "query": "What are the top 5 products by total revenue?",
+    "query": "What is the average XP earned per user?",
     "connector_id": "neon:public",
     "expected_intent": "sql",
-    "expected_tables": ["products", "order_items"],
-    "expected_contains": ["product", "revenue"]
+    "expected_tables": ["users"],
+    "expected_contains": ["avg"]
   },
   {
     "id": "002",
-    "query": "Show monthly order count for 2024",
+    "query": "Show the daily task completion rate for the past week",
     "connector_id": "neon:public",
     "expected_intent": "sql",
-    "expected_tables": ["orders"],
-    "expected_contains": ["month", "count"]
+    "expected_tables": ["daily_logs"],
+    "expected_contains": ["rate"]
   },
   {
     "id": "003",
-    "query": "Which region has the highest average order value?",
+    "query": "Which task categories have the highest number of PENDING tasks?",
     "connector_id": "neon:public",
     "expected_intent": "sql",
-    "expected_tables": ["customers", "orders"],
-    "expected_contains": ["region", "average"]
+    "expected_tables": ["tasks"],
+    "expected_contains": ["category"]
   },
   {
     "id": "004",
-    "query": "List customers who joined in 2023 and have placed more than 3 orders",
+    "query": "Count the number of HIGH priority tasks that are PENDING",
     "connector_id": "neon:public",
     "expected_intent": "sql",
-    "expected_tables": ["customers", "orders"],
-    "expected_contains": ["customer", "orders"]
+    "expected_tables": ["tasks"],
+    "expected_contains": ["count"]
   },
   {
     "id": "005",
-    "query": "What is the refund rate by product category?",
+    "query": "Count the number of memory records grouped by their intent in the database",
     "connector_id": "neon:public",
     "expected_intent": "sql",
-    "expected_tables": ["orders", "order_items", "products"],
-    "expected_contains": ["refund", "category"]
+    "expected_tables": ["conversation_memory"],
+    "expected_contains": ["intent"]
   },
   {
     "id": "006",

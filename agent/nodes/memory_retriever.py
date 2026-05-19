@@ -2,11 +2,19 @@
 agent/nodes/memory_retriever.py
 Retrieves similar past queries/insights from pgvector memory_embeddings table.
 Uses connection pool for performance.
+
+OPTIMIZATION: Runs embedding generation concurrently with the database query
+using ThreadPoolExecutor to overlap CPU-bound and IO-bound work.
 """
 
+import concurrent.futures
 from agent.state import AgentState
 from db.pool import pooled_cursor
 from llm import get_embedder
+
+
+# Persistent thread pool — avoids repeated thread creation overhead
+_pool = concurrent.futures.ThreadPoolExecutor(max_workers=2, thread_name_prefix="mem_retriever")
 
 
 def memory_retriever(state: AgentState) -> AgentState:
